@@ -1,0 +1,316 @@
+/* General Layout */
+.dashboard-container {
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background-color: #f9fafb;
+  padding: 20px;
+}
+
+/* Navbar */
+.navbar {
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-title {
+  color: #2f855a;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+/* Container for links and buttons */
+.navbar-links-container {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 40px;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links li {
+  color: #4a5568;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.navbar-links li:hover {
+  color: #2f855a;
+}
+
+/* Report Button */
+.report-button {
+  background-color: #2f855a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.report-button:hover {
+  background-color: #276749;
+}
+
+/* Logout Button */
+.logout-button {
+  background-color: #2f855a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #276749;
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  text-align: center;
+  background-color: #15803d;
+  color: white;
+  padding: 64px 0;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.hero-section h2 {
+  font-size: 36px;
+  font-weight: bold;
+  z-index: 2;
+  position: relative;
+}
+
+.hero-section p {
+  font-size: 18px;
+  margin-top: 8px;
+  z-index: 2;
+  position: relative;
+}
+
+.background-shape {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  z-index: 1;
+}
+
+/* Circles Decoration */
+.circle {
+  position: absolute;
+  opacity: 0.7;
+}
+
+.circle1 {
+  top: 20px;
+  left: 20px;
+  width: 150px;
+}
+
+.circle2 {
+  top: 120px;
+  right: 50px;
+  width: 90px;
+}
+
+.circle3 {
+  bottom: 50px;
+  left: 250px;
+  width: 100px;
+}
+
+.circle4 {
+  bottom: 150px;
+  right: 150px;
+  width: 130px;
+}
+
+.circle5 {
+  top: 250px;
+  right: 250px;
+  width: 80px;
+}
+
+/* Stats Section */
+.stats-section {
+  display: flex;
+  justify-content: space-around;
+  margin: 64px auto;
+  gap: 32px;
+  max-width: 1200px;
+  text-align: center;
+}
+
+.stat-card {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  width: 30%;
+}
+
+.stat-value {
+  font-size: 48px;
+  font-weight: bold;
+  color: #2f855a;
+}
+
+.stat-label {
+  font-size: 16px;
+  color: #4a5568;
+  margin-top: 8px;
+}
+
+/* Activities & Notifications Grid */
+.activities-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin: 32px auto;
+  max-width: 1200px;
+}
+
+.notifications-section,
+.activities-section {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e2e8f0;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2f855a;
+}
+
+.section-header a {
+  font-size: 14px;
+  color: #2f855a;
+  text-decoration: none;
+}
+
+.section-header a:hover {
+  text-decoration: underline;
+}
+
+/* Notification Cards */
+.notification-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.notification-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background-color: #e2e8f0;
+}
+
+.notification-details {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: bold;
+  color: #2f855a;
+}
+
+.notification-status {
+  font-weight: bold;
+  color: #38a169;
+}
+
+/* Activity Cards */
+.activity-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.activity-volunteers {
+  font-size: 14px;
+  color: #2f855a;
+  font-weight: bold;
+}
+
+.activity-join-button {
+  background-color: #2f855a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.activity-join-button:hover {
+  background-color: #276749;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stats-section {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .activities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .navbar-links {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
