@@ -64,6 +64,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 32px;
+  gap: 25px;
 }
 
 .progress-step {
@@ -82,6 +83,19 @@
 .progress-step.active {
   background-color: #2f855a;
   color: #ffffff;
+}
+
+.progress-step-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-label {
+  font-size: 14px;
+  color: #4a5568;
+  text-align: center;
 }
 
 .progress-line {
@@ -158,10 +172,77 @@ textarea.input-field {
   max-width: 100%;
 }
 
+.max-w-xs {
+  max-width: 320px;
+}
+
 .h-auto {
   height: auto;
 }
 
 .rounded-lg {
   border-radius: 8px;
+}
+
+/* Styled upload container */
+.upload-container {
+  border: 2px dashed #a0aec0;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.upload-container:hover {
+  border-color: #2f855a;
+  background-color: #f0fff4;
+}
+
+.upload-container img {
+  max-width: 100%; /* Membatasi gambar agar tidak lebih lebar dari kontainer */
+  max-height: 290px; /* Membatasi tinggi gambar maksimal */
+  height: auto; /* Memastikan aspek rasio tetap */
+  margin-top: 10px;
+  border-radius: 8px;
+  object-fit: contain; /* Mengatur gambar agar tetap dalam batas kontainer */
+  display: block; /* Pastikan gambar menjadi elemen blok untuk tata letak vertikal */
+  margin-left: auto;
+  margin-right: auto; /* Memposisikan gambar di tengah */
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: #a0aec0;
+}
+
+.upload-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.upload-text:hover {
+  color: #2f855a;
+}
+
+/* Style for clear button */
+.clear-button {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  display: block; /* Pastikan tombol berada di bawah gambar */
+  margin-left: auto;
+  margin-right: auto; /* Memposisikan tombol di tengah */
+  text-align: center;
+}
+
+
+.clear-button:hover {
+  background-color: #c53030;
 }

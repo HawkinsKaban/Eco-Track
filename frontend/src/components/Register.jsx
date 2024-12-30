@@ -30,6 +30,12 @@ const Register = ({ onNavigateToLogin, onRegister }) => {
     }
   }, [errorMessage]);
 
+  // Fungsi validasi password
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   // Fungsi untuk menangani registrasi
   const handleRegister = (e) => {
     e.preventDefault();
@@ -41,12 +47,17 @@ const Register = ({ onNavigateToLogin, onRegister }) => {
 
     // Validasi input
     if (!trimmedUsername || !trimmedPassword || !trimmedConfirmPassword) {
-      setErrorMessage('All fields are required');
+      setErrorMessage('Semua kolom harus diisi.');
+      return;
+    }
+
+    if (!validatePassword(trimmedPassword)) {
+      setErrorMessage('Password harus minimal 8 karakter, mengandung huruf, angka, dan simbol khusus.');
       return;
     }
 
     if (trimmedPassword !== trimmedConfirmPassword) {
-      setErrorMessage('Passwords do not match');
+      setErrorMessage('Password tidak cocok.');
       return;
     }
 
