@@ -1,20 +1,34 @@
-import React from 'react';
-import { MapPin, Mail, Phone, User, Clock } from 'lucide-react'; // Import ikon yang diperlukan
-import '../styles/Settings.css'; // Pastikan file CSS diimpor dengan benar
+import React, { useState, useEffect } from 'react';
+import { MapPin, Mail, Phone, Clock, Globe } from 'lucide-react';
+import '../styles/Settings.css';
 
 const Settings = ({ user, onNavigate }) => {
-  // Pastikan user sudah ada sebelum digunakan
+  const defaultProfilePhoto = "../assets/images/Default_pfp.png"; // Path ke gambar default
+  const [profileImage, setProfileImage] = useState(defaultProfilePhoto);
+  const [updatedUserData, setUpdatedUserData] = useState({});
+
+  useEffect(() => {
+    // Ambil gambar profil dan data pengguna dari localStorage
+    const storedImage = localStorage.getItem('profileImage');
+    const storedUserData = JSON.parse(localStorage.getItem('userData'));
+    if (storedImage) {
+      setProfileImage(storedImage);
+    }
+    if (storedUserData) {
+      setUpdatedUserData(storedUserData);
+    }
+  }, []);
+
   if (!user) {
-    return <div>Loading...</div>; // Menampilkan loading jika data user belum ada
+    return <div>Loading...</div>;
   }
 
   const handleEditProfileClick = () => {
-    onNavigate('settings-edit'); // Navigasi ke halaman edit profile
+    onNavigate('settings-edit'); // Navigasi ke halaman edit profil
   };
 
   return (
     <div className="settings-container">
-      {/* Sidebar */}
       <div className="sidebar">
         <h1 className="sidebar-title">ECO TRACK</h1>
         <nav className="sidebar-nav">
@@ -25,70 +39,68 @@ const Settings = ({ user, onNavigate }) => {
         </nav>
       </div>
 
-      {/* Main Content */}
       <div className="settings-content">
         <h2 className="settings-title">Setting</h2>
-        <p className="settings-subtitle">Welcome back, {user.username}! Here's what's happening today.</p>
+        <p className="settings-subtitle">Welcome back, {updatedUserData.fullName || user.username}! Here's what's happening today.</p>
 
-        {/* Profile Section */}
         <div className="profile-section">
           <div className="profile-header">
             <div className="profile-image-container">
-              <img src={user.profileImage || '/profile-image.jpg'} alt="Profile" className="profile-image" />
+              <img 
+                src={profileImage} 
+                alt="Profile" 
+                className="profile-image" 
+              />
             </div>
 
             <div className="profile-info">
               <div className="profile-name-section">
-                <h3>{user.username}</h3>
+                <h3>{updatedUserData.fullName || user.username}</h3>
                 <button className="edit-profile-btn" onClick={handleEditProfileClick}>Edit Profile</button>
               </div>
               <p className="profile-title">{user.role}</p>
 
-              {/* Profile Details */}
               <div className="profile-details">
                 <div className="detail-item">
                   <MapPin size={16} />
-                  <span>{user.location}</span>
+                  <span>{updatedUserData.location || 'Lokasi belum ditambahkan'}</span>
                 </div>
                 <div className="detail-item">
                   <Mail size={16} />
-                  <span>{user.email}</span>
+                  <span>{updatedUserData.email || 'Email belum ditambahkan'}</span>
                 </div>
                 <div className="detail-item">
                   <Phone size={16} />
-                  <span>{user.phone}</span>
+                  <span>{updatedUserData.phoneNumber || 'Nomor telepon belum ditambahkan'}</span>
                 </div>
                 <div className="detail-item">
-                  <User size={16} />
-                  <span>{user.membership}</span>
+                  <Globe size={16} />
+                  <span>{updatedUserData.website || 'Website belum ditambahkan'}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Statistics Section */}
         <div className="statistics-section">
           <div className="activity-stats">
             <h4>Activity Statistics</h4>
             <div className="stats-grid">
               <div className="stat-item">
-                <h5>{user.reportsSubmitted}</h5>
+                <h5>{user.reportsSubmitted || 0}</h5>
                 <p>Reports Submitted</p>
               </div>
               <div className="stat-item">
-                <h5>{user.activitiesJoined}</h5>
+                <h5>{user.activitiesJoined || 0}</h5>
                 <p>Activities Joined</p>
               </div>
             </div>
           </div>
 
-          {/* History Activities */}
           <div className="history-activities">
             <h4>History Activities</h4>
             <div className="activity-list">
-              {/* Pastikan activityHistory ada dan berupa array */}
-              {Array.isArray(user.activityHistory) && user.activityHistory.length > 0 ? (
+              {user.activityHistory && user.activityHistory.length > 0 ? (
                 user.activityHistory.map((activity, index) => (
                   <div className="activity-item" key={index}>
                     <Clock size={16} />
@@ -100,7 +112,7 @@ const Settings = ({ user, onNavigate }) => {
                   </div>
                 ))
               ) : (
-                <p>No activities found</p> // Pesan jika tidak ada aktivitas yang tersedia
+                <p>No activities found</p>
               )}
             </div>
           </div>

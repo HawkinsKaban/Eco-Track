@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera } from 'lucide-react';
 import '../styles/SettingsEdit.css';
 
-const SettingsEdit = ({ user, onNavigate, onSave }) => {
+const SettingsEdit = ({ user, onNavigate }) => {
+  const defaultProfilePhoto = "../assets/images/Default_pfp.png"; // Path ke gambar default
+
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -12,7 +14,10 @@ const SettingsEdit = ({ user, onNavigate, onSave }) => {
     website: user?.website || '',
   });
 
-  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState(
+    localStorage.getItem('profileImage') || defaultProfilePhoto
+  );
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -25,7 +30,6 @@ const SettingsEdit = ({ user, onNavigate, onSave }) => {
         organization: user.organization,
         website: user.website,
       });
-      setProfilePhoto(user.profilePhoto || "/path-to-profile-image.jpg");
     }
   }, [user]);
 
@@ -40,19 +44,17 @@ const SettingsEdit = ({ user, onNavigate, onSave }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setProfilePhoto(URL.createObjectURL(file));
+      const newImage = URL.createObjectURL(file);
+      setProfilePhoto(newImage);
+      localStorage.setItem('profileImage', newImage);
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    if (profilePhoto) {
-      console.log('Uploaded profile photo:', profilePhoto);
-    }
-    const updatedUser = { ...user, ...formData, profilePhoto };
-    onSave(updatedUser); // Menyimpan data yang diperbarui
-    onNavigate('settings'); // Kembali ke halaman settings
+    const updatedUser = { ...formData, profilePhoto };
+    localStorage.setItem('userData', JSON.stringify(updatedUser)); // Simpan data ke localStorage
+    onNavigate('settings'); // Navigasi kembali ke halaman Settings
   };
 
   return (
@@ -69,18 +71,16 @@ const SettingsEdit = ({ user, onNavigate, onSave }) => {
 
       <div className="settings-edit-content">
         <div className="settings-edit-header">
-          <h2 className="settings-edit-title">Setting</h2>
-          <p className="settings-edit-subtitle">Welcome back, {formData.fullName}! Here's what's happening today.</p>
+          <h2 className="settings-edit-title">Edit Profile</h2>
+          <p className="settings-edit-subtitle">
+            Welcome back, {formData.fullName || user?.username}! Here’s what’s happening today.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="settings-edit-form">
           <div className="profile-photo-section">
             <div className="profile-photo-container">
-              <img
-                src={profilePhoto || "/path-to-profile-image.jpg"}
-                alt="Profile"
-                className="profile-photo"
-              />
+              <img src={profilePhoto} alt="Profile" className="profile-photo" />
               <button
                 type="button"
                 className="photo-upload-icon"
@@ -100,15 +100,8 @@ const SettingsEdit = ({ user, onNavigate, onSave }) => {
               <h3>Profile Photo</h3>
               <p>Upload a new profile photo</p>
             </div>
-
-            {/* Pindahkan tombol "Selesai" ke bawah bagian ini */}
             <div className="form-footer">
-              <button
-                type="submit"
-                className="done-btn"
-              >
-                Selesai
-              </button>
+              <button type="submit" className="done-btn">Selesai</button>
             </div>
           </div>
 

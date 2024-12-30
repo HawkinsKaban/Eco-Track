@@ -80,7 +80,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   flex-wrap: wrap;
   justify-content: center;
-  height: 115px; /* Menetapkan tinggi yang sama untuk photo section */
+  height: 116px; /* Menetapkan tinggi yang sama untuk photo section */
+  position: relative; /* Tambahkan relative positioning */
 }
 
 .profile-photo-container {
@@ -135,20 +136,19 @@
   font-size: 14px;
 }
 
-/* Update done button to match styling of profile-section */
 .done-btn {
   background-color: #15803d;
   color: white;
   border: none;
-  padding: 12px 34px;
+  padding: 8px 28px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
-  width: auto; /* Agar tombol memenuhi lebar */
-  text-align: center;
   font-size: 16px;
-  margin-top: 24px;
+  font-weight: 500;
   transition: background-color 0.3s ease;
+  position: absolute; /* Tambahkan absolute positioning */
+  top: 16px; /* Atur posisi dari atas */
+  right: 16px; /* Atur posisi dari kanan */
 }
 
 .done-btn:hover {

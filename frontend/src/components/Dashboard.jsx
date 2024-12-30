@@ -1,90 +1,83 @@
-import React from 'react';
-import '../styles/Dashboard.css';
-
-import Circle1 from '../assets/images/Ellipse 10.png';
-import Circle2 from '../assets/images/Ellipse 11.png';
-import Circle3 from '../assets/images/Ellipse 12.png';
-import Circle4 from '../assets/images/Ellipse 13.png';
-import Circle5 from '../assets/images/Ellipse 14.png';
-import BackgroundShape from '../assets/images/Rectangle 16.png';
+import React, { useState, useEffect } from "react";
+import { FaMapMarkerAlt, FaCalendarAlt, FaBell } from "react-icons/fa"; // Menambahkan FaBell
+import "../styles/Dashboard.css";
 
 const Dashboard = ({ user, onLogout, onNavigate }) => {
+  const [notifications, setNotifications] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [showModal, setShowModal] = useState(false); // State untuk kontrol modal
+
+  useEffect(() => {
+    const storedReports = JSON.parse(localStorage.getItem("reports")) || [];
+
+    const relevantReports = storedReports.filter(
+      (report) => report.status === "Active" || report.status === "Published"
+    );
+
+    // Mengurutkan laporan berdasarkan waktu terbaru
+    relevantReports.sort((a, b) => new Date(b.time) - new Date(a.time)); // Mengurutkan dari yang terbaru
+
+    setNotifications(
+      relevantReports.map((report) => ({
+        id: report.id,
+        title: report.title,
+        location: report.location,
+        time: new Date(report.time).toLocaleTimeString("id-ID"),
+        image: report.photo,
+        status: report.status,
+      }))
+    );
+
+    setActivities(
+      relevantReports.map((report) => ({
+        ...report,
+        time: report.verifiedDate
+          ? new Date(report.verifiedDate).toLocaleDateString("id-ID", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })
+          : new Date(report.time).toLocaleDateString("id-ID", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }),
+      }))
+    );
+  }, []);
+
   const stats = [
-    { value: '150+', label: 'Laporan Aktif' },
-    { value: '500+', label: 'Relawan' },
-    { value: '75+', label: 'Kegiatan Selesai' },
+    { value: notifications.length, label: "Laporan Aktif" },
+    { value: "500+", label: "Relawan" },
+    { value: activities.length, label: "Kegiatan Mendatang" },
   ];
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Tumpukan sampah di Taman kota',
-      location: 'Jl. Amenogawa no.12',
-      status: 'Active',
-      time: '2 Jam lalu',
-      image: '/path-to-image-1.png',
-    },
-    {
-      id: 2,
-      title: 'Tumpukan sampah di Gang siber',
-      location: 'Jl. Cyber 213',
-      status: 'Active',
-      time: '1 Jam lalu',
-      image: '/path-to-image-2.png',
-    },
-  ];
-
-  const activities = [
-    {
-      id: 1,
-      type: 'Bersih - bersih Taman',
-      location: 'Taman Dayeuhkolot',
-      date: 'Senin, 1 November 2024',
-      volunteers: 16,
-    },
-    {
-      id: 2,
-      type: 'Bersih - bersih Gang',
-      location: 'Jl. Cyber 213',
-      date: 'Jumat, 1 November 2024',
-      volunteers: 10,
-    },
-  ];
+  const handleModalToggle = () => {
+    setShowModal(!showModal); // Toggle modal visibility
+  };
 
   return (
     <div className="dashboard-container">
-      {/* Navbar */}
       <nav className="navbar">
         <h1 className="navbar-title">ECO TRACK</h1>
         <div className="navbar-links-container">
           <ul className="navbar-links">
-          <li onClick={() => onNavigate('dashboard')}>Beranda</li>
-<li onClick={() => onNavigate('report')}>Laporan</li>
-<li onClick={() => onNavigate('activities')}>Kegiatan</li>
-<li onClick={() => onNavigate('settings')}>Settings</li>
+            <li onClick={() => onNavigate("dashboard")}>Beranda</li>
+            <li onClick={() => onNavigate("report")}>Laporan</li>
+            <li onClick={() => onNavigate("activities")}>Kegiatan</li>
+            <li onClick={() => onNavigate("settings")}>Settings</li>
           </ul>
-          <button className="logout-button" onClick={onLogout}>
-            Logout
-          </button>
+          <button className="logout-button" onClick={onLogout}>Logout</button>
         </div>
       </nav>
 
-      {/* Hero Section */}
       <header className="hero-section">
-        <img src={BackgroundShape} alt="Background Shape" className="background-shape" />
-
-        {/* Circles Decoration */}
-        <img src={Circle1} alt="Circle 1" className="circle circle1" />
-        <img src={Circle2} alt="Circle 2" className="circle circle2" />
-        <img src={Circle3} alt="Circle 3" className="circle circle3" />
-        <img src={Circle4} alt="Circle 4" className="circle circle4" />
-        <img src={Circle5} alt="Circle 5" className="circle circle5" />
-
         <h2>Peduli Lingkungan Bersama</h2>
-        <p>Welcome {user.username}! Here's what's happening today.</p>
+        <p>Selamat datang kembali, {user.username}! Berikut informasi hari ini.</p>
       </header>
 
-      {/* Stats Section */}
       <section className="stats-section">
         {stats.map((stat, index) => (
           <div key={index} className="stat-card">
@@ -94,51 +87,105 @@ const Dashboard = ({ user, onLogout, onNavigate }) => {
         ))}
       </section>
 
-      {/* Notifications and Activities */}
       <div className="activities-grid">
-        {/* Notification Section */}
         <div className="notifications-section">
           <div className="section-header">
-            <h3>Notifikasi</h3>
-            <button onClick={() => onNavigate('notifications')} className="section-link">Lihat Semua</button>
-          </div>
-          {notifications.map((notification) => (
-            <div key={notification.id} className="notification-card">
-              <img
-                src={notification.image}
-                alt={notification.title}
-                className="notification-image"
-              />
-              <div className="notification-details">
-                <p className="notification-title">{notification.title}</p>
-                <p>{notification.location}</p>
-                <p>{notification.time}</p>
-              </div>
-              <span className={`notification-status ${notification.status.toLowerCase()}`}>{notification.status}</span>
+            <div className="section-header-title">
+              <FaBell size={20} className="bell-icon" />
+              <h3>Notifikasi</h3>
             </div>
-          ))}
+            <button onClick={handleModalToggle} className="section-link">
+              Lihat Semua
+            </button>
+          </div>
+
+          {/* Cek apakah ada notifikasi */}
+          {notifications.length > 0 ? (
+            notifications.slice(0, 3).map((notification) => (
+              <div key={notification.id} className="notification-card">
+                <img
+                  src={notification.image || "/default-image.png"}
+                  alt={notification.title}
+                  className="notification-image"
+                />
+                <div className="notification-details">
+                  <p className="notification-title">{notification.title}</p>
+                  <p className="notification-location">{notification.location}</p>
+                </div>
+                <div className="notification-meta">
+                  <p className="notification-status">{notification.status}</p>
+                  <p className="notification-time">{notification.time}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="no-notifications">Tidak ada notifikasi saat ini.</p> // Pesan jika tidak ada notifikasi
+          )}
         </div>
 
-        {/* Upcoming Activities Section */}
+        {/* Kegiatan Mendatang */}
         <div className="activities-section">
           <div className="section-header">
             <h3>Kegiatan Mendatang</h3>
           </div>
-          {activities.map((activity) => (
-            <div key={activity.id} className="activity-card">
-              <div className="activity-details">
-                <h4>{activity.type}</h4>
-                <p>{activity.location}</p>
-                <p>{activity.date}</p>
+          {activities.length > 0 ? (
+            activities.map((activity, index) => (
+              <div key={index} className="activity-card">
+                <div className="activity-details">
+                  <p className="activity-title">{activity.title}</p>
+                  <div className="activity-location">
+                    <FaMapMarkerAlt size={16} className="location-icon" />
+                    <p>{activity.location}</p>
+                  </div>
+                  <div className="activity-time">
+                    <FaCalendarAlt size={16} className="calendar-icon" />
+                    <p>{activity.time}</p>
+                  </div>
+                </div>
+                <div className="activity-actions">
+                  <span className="activity-volunteers">{activity.volunteers} relawan</span>
+                  <button className="activity-join-button" onClick={() => onNavigate("joinActivity")}>
+                    Masuk
+                  </button>
+                </div>
               </div>
-              <div className="activity-actions">
-                <span className="activity-volunteers">{activity.volunteers} relawan</span>
-                <button className="activity-join-button" onClick={() => onNavigate('joinActivity')}>Masuk</button>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="no-activity">Tidak ada kegiatan mendatang</p>
+          )}
         </div>
       </div>
+
+      {/* Modal untuk menampilkan semua laporan */}
+      {showModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Semua Notifikasi</h3>
+              <button onClick={handleModalToggle} className="close-modal-btn">Tutup</button>
+            </div>
+            <div className="modal-body">
+              {notifications.map((notification) => (
+                <div key={notification.id} className="notification-card">
+                  <img
+                    src={notification.image || "/default-image.png"}
+                    alt={notification.title}
+                    className="notification-image"
+                  />
+                  <div className="notification-details">
+                    <p className="notification-title">{notification.title}</p>
+                    <p className="notification-location">{notification.location}</p>
+                  </div>
+                  <div className="notification-meta">
+                    <p className="notification-status">{notification.status}</p>
+                    <p className="notification-time">{notification.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

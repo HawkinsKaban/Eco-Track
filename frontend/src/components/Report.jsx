@@ -1,41 +1,40 @@
-import React, { useState } from 'react';
-import { Camera, Check } from 'lucide-react';
-import '../styles/Report.css';
+import React, { useState } from "react";
+import { Camera, Check } from "lucide-react";
+import "../styles/Report.css";
 
-const Report = ({ onNext, onNavigate }) => {
+const Report = ({ onNavigate }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    title: '',
-    category: 'Kerusakan Lingkungan',
-    description: '',
+    title: "",
+    category: "Kerusakan Lingkungan",
+    description: "",
     photo: null,
-    address: '',
-    addressDetail: ''
+    address: "",
+    addressDetail: "",
   });
 
   const steps = [
-    { number: 1, label: 'Detail', active: currentStep >= 1 },
-    { number: 2, label: 'Foto', active: currentStep >= 2 },
-    { number: 3, label: 'Lokasi', active: currentStep >= 3 },
-    { number: 4, label: 'Selesai', active: currentStep >= 4 }
+    { number: 1, label: "Detail", active: currentStep >= 1 },
+    { number: 2, label: "Foto", active: currentStep >= 2 },
+    { number: 3, label: "Lokasi", active: currentStep >= 3 },
+    { number: 4, label: "Selesai", active: currentStep >= 4 },
   ];
 
   const handleNext = () => {
-    // Validation for Step 1
     if (currentStep === 1 && (!formData.title || !formData.description)) {
       alert("Semua bidang harus diisi pada langkah pertama.");
       return;
     }
-    // Validation for Step 3
+    if (currentStep === 2 && !formData.photo) {
+      alert("Gambar harus diunggah pada langkah kedua.");
+      return;
+    }
     if (currentStep === 3 && !formData.address) {
       alert("Alamat harus diisi pada langkah ketiga.");
       return;
     }
-    // If at the last step, send data to `onNext`
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
-    } else {
-      onNext(formData); // Send data when at the last step
     }
   };
 
@@ -46,6 +45,24 @@ const Report = ({ onNext, onNavigate }) => {
     }
   };
 
+  const handleSubmitReport = () => {
+    const newReport = {
+      id: Date.now(),
+      title: formData.title,
+      location: formData.address,
+      status: "Draft", // Ubah status menjadi Draft
+      time: new Date().toLocaleTimeString(),
+      photo: formData.photo,
+    };
+  
+    const existingReports = JSON.parse(localStorage.getItem("reports")) || [];
+    const updatedReports = [...existingReports, newReport];
+  
+    localStorage.setItem("reports", JSON.stringify(updatedReports));
+    alert("Laporan berhasil dibuat! Silakan publikasikan di halaman Kegiatan.");
+    onNavigate("activities"); // Arahkan pengguna ke halaman Kegiatan
+  };
+  
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -81,28 +98,53 @@ const Report = ({ onNext, onNavigate }) => {
                 className="input-field"
               />
             </div>
-            <button className="next-button" onClick={handleNext}>Lanjutkan</button>
+            <button className="next-button" onClick={handleNext}>
+              Lanjutkan
+            </button>
           </div>
         );
       case 2:
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="font-medium mb-4">Upload Foto</h3>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
-                <Camera size={48} className="text-gray-400 mb-4" />
-                {formData.photo && (
-                  <img src={formData.photo} alt="Preview" className="max-w-full h-auto rounded-lg" />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="input-file"
-                />
+              <h3>Upload Foto</h3>
+              <div
+                className="upload-container"
+                onClick={() => document.getElementById("fileInput").click()}
+              >
+                <div>
+                  {!formData.photo ? (
+                    <>
+                      <Camera className="upload-icon" />
+                      <p className="upload-text">Klik untuk unggah foto atau tarik file ke sini</p>
+                    </>
+                  ) : (
+                    <div>
+                      <img src={formData.photo} alt="Preview Foto" className="max-w-full h-auto" />
+                      <button
+                        className="clear-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFormData({ ...formData, photo: null });
+                        }}
+                      >
+                        Hapus Foto
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    id="fileInput"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    style={{ display: "none" }}
+                  />
+                </div>
               </div>
             </div>
-            <button onClick={handleNext} className="next-button">Lanjutkan</button>
+            <button onClick={handleNext} className="next-button">
+              Lanjutkan
+            </button>
           </div>
         );
       case 3:
@@ -121,13 +163,15 @@ const Report = ({ onNext, onNavigate }) => {
             <div className="form-group">
               <label>Deskripsi Alamat</label>
               <textarea
-                placeholder="Jl. Atmawigena no 12, jalan terus melewati gang..."
+                placeholder="Detail Alamat"
                 value={formData.addressDetail}
                 onChange={(e) => setFormData({ ...formData, addressDetail: e.target.value })}
                 className="input-field"
               />
             </div>
-            <button className="next-button" onClick={handleNext}>Lanjutkan</button>
+            <button className="next-button" onClick={handleNext}>
+              Lanjutkan
+            </button>
           </div>
         );
       case 4:
@@ -138,9 +182,11 @@ const Report = ({ onNext, onNavigate }) => {
                 <Check className="text-green-600" size={24} />
               </div>
             </div>
-            <h3 className="text-xl font-medium">Laporan Anda Berhasil Dikirim</h3>
-            <p className="text-gray-600">Terima kasih atas kontribusi Anda dalam menjaga lingkungan.</p>
-            <button onClick={() => setCurrentStep(1)} className="next-button">Selesai</button>
+            <h3>Laporan Anda Berhasil Dikirim</h3>
+            <p>Terima kasih atas kontribusi Anda dalam menjaga lingkungan.</p>
+            <button onClick={handleSubmitReport} className="next-button">
+              Selesai
+            </button>
           </div>
         );
       default:
@@ -150,33 +196,43 @@ const Report = ({ onNext, onNavigate }) => {
 
   return (
     <div className="settings-container">
-      {/* Sidebar */}
       <div className="sidebar">
         <h1 className="sidebar-title">ECO TRACK</h1>
         <nav className="sidebar-nav">
-          <button className="sidebar-link" onClick={() => onNavigate('dashboard')}>Beranda</button>
-          <button className="sidebar-link active" onClick={() => onNavigate('report')}>Laporan</button>
-          <button className="sidebar-link" onClick={() => onNavigate('activities')}>Kegiatan</button>
-          <button className="sidebar-link" onClick={() => onNavigate('settings')}>Setting</button>
+          <button className="sidebar-link" onClick={() => onNavigate("dashboard")}>
+            Beranda
+          </button>
+          <button className="sidebar-link active" onClick={() => onNavigate("report")}>
+            Laporan
+          </button>
+          <button className="sidebar-link" onClick={() => onNavigate("activities")}>
+            Kegiatan
+          </button>
+          <button className="sidebar-link" onClick={() => onNavigate("settings")}>
+            Setting
+          </button>
         </nav>
       </div>
-
-      {/* Main Content */}
       <div className="settings-content">
         <h2 className="settings-title">Laporan</h2>
-        <p className="settings-subtitle">Pilih kategori masalah, upload foto, dan tentukan lokasi masalah.</p>
-
-        {/* Progress Bar */}
+        <p className="settings-subtitle">
+          Pilih kategori masalah, upload foto, dan tentukan lokasi masalah.
+        </p>
         <div className="progress-bar">
           {steps.map((step, index) => (
             <React.Fragment key={step.number}>
-              <div className={`progress-step ${step.active ? 'active' : ''}`}>{step.number}</div>
-              {index < steps.length - 1 && <div className={`progress-line ${steps[index + 1].active ? 'active' : ''}`} />}
+              <div className="progress-step-container">
+                <div className={`progress-step ${step.active ? "active" : ""}`}>
+                  {step.number}
+                </div>
+                <p className="progress-label">{step.label}</p>
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`progress-line ${steps[index + 1].active ? "active" : ""}`} />
+              )}
             </React.Fragment>
           ))}
         </div>
-
-        {/* Step Content */}
         {renderStepContent()}
       </div>
     </div>
