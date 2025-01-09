@@ -1,35 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera } from 'lucide-react';
+import DefaultPfp from '../assets/images/Default_pfp.png'; // Import gambar default
 import '../styles/SettingsEdit.css';
 
-const SettingsEdit = ({ user, onNavigate }) => {
-  const defaultProfilePhoto = "../assets/images/Default_pfp.png"; // Path ke gambar default
-
+const SettingsEdit = ({ user, onNavigate, fetchProfileData }) => {
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
+    fullName: user?.username || '',
     email: user?.email || '',
-    phoneNumber: user?.phoneNumber || '',
+    phoneNumber: user?.phone || '',
     location: user?.location || '',
     organization: user?.organization || '',
-    website: user?.website || '',
   });
 
-  const [profilePhoto, setProfilePhoto] = useState(
-    localStorage.getItem('profileImage') || defaultProfilePhoto
-  );
-
+  const [profilePhoto, setProfilePhoto] = useState(user?.profileImage || DefaultPfp);
+  const [uploadedFile, setUploadedFile] = useState(null); // State untuk file asli
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user) {
       setFormData({
-        fullName: user.fullName,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        location: user.location,
-        organization: user.organization,
-        website: user.website,
+        fullName: user.username || '',
+        email: user.email || '',
+        phoneNumber: user.phone || '',
+        location: user.location || '',
+        organization: user.organization || '',
       });
+      setProfilePhoto(user.profileImage || DefaultPfp);
     }
   }, [user]);
 
@@ -44,17 +40,51 @@ const SettingsEdit = ({ user, onNavigate }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setUploadedFile(file); // Simpan file asli
       const newImage = URL.createObjectURL(file);
-      setProfilePhoto(newImage);
-      localStorage.setItem('profileImage', newImage);
+      setProfilePhoto(newImage); // Tampilkan preview
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleRemovePhoto = () => {
+    setUploadedFile(null); // Hapus file asli
+    setProfilePhoto(DefaultPfp); // Set foto profil ke default
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const updatedUser = { ...formData, profilePhoto };
-    localStorage.setItem('userData', JSON.stringify(updatedUser)); // Simpan data ke localStorage
-    onNavigate('settings'); // Navigasi kembali ke halaman Settings
+    const updatedUser = { ...formData };
+
+    try {
+      const formDataToSend = new FormData();
+      Object.keys(updatedUser).forEach((key) => {
+        if (updatedUser[key]) formDataToSend.append(key, updatedUser[key]);
+      });
+
+      if (uploadedFile) {
+        formDataToSend.append('profileImage', uploadedFile);
+      }
+
+      const response = await fetch('http://localhost:5000/api/users/profile', {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formDataToSend,
+      });
+
+      if (!response.ok) throw new Error('Gagal mengupdate profil');
+
+      alert('Profil berhasil diperbarui');
+
+      // Panggil ulang data profil setelah berhasil update
+      if (fetchProfileData) {
+        await fetchProfileData(); // Refresh data di Settings
+      }
+      onNavigate('settings'); // Kembali ke halaman settings
+    } catch (error) {
+      alert(error.message || 'Terjadi kesalahan');
+    }
   };
 
   return (
@@ -73,7 +103,7 @@ const SettingsEdit = ({ user, onNavigate }) => {
         <div className="settings-edit-header">
           <h2 className="settings-edit-title">Edit Profile</h2>
           <p className="settings-edit-subtitle">
-            Welcome back, {formData.fullName || user?.username}! Here’s what’s happening today.
+            Welcome back, {formData.fullName || 'User'}! Here’s what’s happening today.
           </p>
         </div>
 
@@ -98,8 +128,15 @@ const SettingsEdit = ({ user, onNavigate }) => {
             </div>
             <div className="profile-photo-text">
               <h3>Profile Photo</h3>
-              <p>Upload a new profile photo</p>
+              <p>Upload a new profile photo or remove the current one</p>
             </div>
+            <button
+              type="button"
+              className="remove-photo-btn"
+              onClick={handleRemovePhoto}
+            >
+              Remove Photo
+            </button>
             <div className="form-footer">
               <button type="submit" className="done-btn">Selesai</button>
             </div>
@@ -128,10 +165,14 @@ const SettingsEdit = ({ user, onNavigate }) => {
                   onChange={handleInputChange}
                 />
               </div>
+            </div>
+
+            <div className="form-section">
+              <h3>Contact Information</h3>
               <div className="form-group">
                 <label htmlFor="phoneNumber">Phone Number</label>
                 <input
-                  type="tel"
+                  type="text"
                   id="phoneNumber"
                   name="phoneNumber"
                   value={formData.phoneNumber}
@@ -148,10 +189,6 @@ const SettingsEdit = ({ user, onNavigate }) => {
                   onChange={handleInputChange}
                 />
               </div>
-            </div>
-
-            <div className="form-section">
-              <h3>Additional Information</h3>
               <div className="form-group">
                 <label htmlFor="organization">Organization</label>
                 <input
@@ -159,16 +196,6 @@ const SettingsEdit = ({ user, onNavigate }) => {
                   id="organization"
                   name="organization"
                   value={formData.organization}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="website">Website</label>
-                <input
-                  type="text"
-                  id="website"
-                  name="website"
-                  value={formData.website}
                   onChange={handleInputChange}
                 />
               </div>

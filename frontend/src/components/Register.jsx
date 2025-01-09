@@ -9,10 +9,15 @@ import Circle3 from '../assets/images/Ellipse 7.png';
 import Circle4 from '../assets/images/Ellipse 8.png';
 import Circle5 from '../assets/images/Ellipse 9.png';
 
-const Register = ({ onNavigateToLogin, onRegister }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const Register = ({ onNavigateToLogin }) => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'user', // Default role
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -36,34 +41,84 @@ const Register = ({ onNavigateToLogin, onRegister }) => {
     return passwordRegex.test(password);
   };
 
-  // Fungsi untuk menangani registrasi
-  const handleRegister = (e) => {
+  // Handle perubahan input
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    clearErrorMessage();
+  };
+
+  // Fungsi untuk registrasi
+  const handleRegister = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     // Trim semua input
-    const trimmedUsername = username.trim();
-    const trimmedPassword = password.trim();
-    const trimmedConfirmPassword = confirmPassword.trim();
+    const trimmedData = {
+      username: formData.username.trim(),
+      email: formData.email.trim(),
+      password: formData.password.trim(),
+      confirmPassword: formData.confirmPassword.trim(),
+    };
 
     // Validasi input
-    if (!trimmedUsername || !trimmedPassword || !trimmedConfirmPassword) {
-      setErrorMessage('Semua kolom harus diisi.');
+    if (!trimmedData.username || !trimmedData.email || !trimmedData.password || !trimmedData.confirmPassword) {
+      setErrorMessage('Semua field harus diisi');
+      setIsLoading(false);
       return;
     }
 
-    if (!validatePassword(trimmedPassword)) {
-      setErrorMessage('Password harus minimal 8 karakter, mengandung huruf, angka, dan simbol khusus.');
+    // Validasi format password
+    if (!validatePassword(trimmedData.password)) {
+      setErrorMessage('Password harus minimal 8 karakter, mengandung huruf, angka, dan simbol khusus');
+      setIsLoading(false);
       return;
     }
 
-    if (trimmedPassword !== trimmedConfirmPassword) {
-      setErrorMessage('Password tidak cocok.');
+    // Validasi konfirmasi password
+    if (trimmedData.password !== trimmedData.confirmPassword) {
+      setErrorMessage('Password tidak cocok');
+      setIsLoading(false);
       return;
     }
 
-    // Jika validasi berhasil, panggil fungsi onRegister
-    onRegister({ username: trimmedUsername, password: trimmedPassword });
-    setErrorMessage('');
+    try {
+      // Kirim request ke API register
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: trimmedData.username,
+          email: trimmedData.email,
+          password: trimmedData.password,
+          role: formData.role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      // Jika registrasi berhasil
+      if (data.success) {
+        alert('Registrasi berhasil! Silakan login.');
+        onNavigateToLogin();
+      } else {
+        throw new Error(data.message || 'Registrasi gagal');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setErrorMessage(error.message || 'Terjadi kesalahan saat registrasi');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -82,12 +137,22 @@ const Register = ({ onNavigateToLogin, onRegister }) => {
           <input
             type="text"
             placeholder="Username"
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-              clearErrorMessage();
-            }}
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
             className="form-input"
+            disabled={isLoading}
+          />
+
+          {/* Input Email */}
+          <input
+            type="email"
+            placeholder="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className="form-input"
+            disabled={isLoading}
           />
 
           {/* Input Password */}
@@ -95,12 +160,11 @@ const Register = ({ onNavigateToLogin, onRegister }) => {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                clearErrorMessage();
-              }}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
               className="form-input"
+              disabled={isLoading}
             />
             <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -112,27 +176,30 @@ const Register = ({ onNavigateToLogin, onRegister }) => {
             <input
               type={showConfirmPassword ? 'text' : 'password'}
               placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                clearErrorMessage();
-              }}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
               className="form-input"
+              disabled={isLoading}
             />
             <span className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
               {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
             </span>
           </div>
 
-          {/* Tombol Register */}
-          <button type="submit" className="form-button">Register</button>
+          {/* Submit Button */}
+          <button type="submit" className="form-button" disabled={isLoading}>
+            {isLoading ? 'Loading...' : 'Register'}
+          </button>
+
+          {/* Error Message */}
           {errorMessage && <p className="error-message">{errorMessage}</p>}
         </form>
 
-        {/* Link untuk kembali ke halaman login */}
+        {/* Link to Login */}
         <p className="text-center">
           Sudah punya akun?{' '}
-          <span className="link-button" onClick={onNavigateToLogin}>
+          <span className="link-button" onClick={onNavigateToLogin} style={{ pointerEvents: isLoading ? 'none' : 'auto' }}>
             Login
           </span>
         </p>

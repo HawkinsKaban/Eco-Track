@@ -6,71 +6,112 @@ const activityController = {
   async createActivity(req, res) {
     try {
       const { title, description, location, date, relatedReport } = req.body;
-
+  
+      // Validasi input
+      if (!title || !description || !location || !date || !relatedReport) {
+        return res.status(400).json({ error: 'Semua field harus diisi' });
+      }
+  
+      // Buat aktivitas baru
       const activity = new Activity({
         title,
         description,
-        location: JSON.parse(location),
-        date,
-        coordinator: req.user.id,
-        relatedReport
+        location: typeof location === 'string' ? JSON.parse(location) : location,
+        date: new Date(date),
+        coordinator: req.user.id, // Ambil dari user yang terautentikasi
+        relatedReport,
+        status: 'planned', // Set status default
+        volunteers: [] // Inisialisasi array volunteers kosong
       });
-
-      await activity.save();
-
+  
+      const savedActivity = await activity.save();
+  
+      // Populate data coordinator
+      await savedActivity.populate('coordinator', 'username');
+  
       res.status(201).json({
+        success: true,
         message: 'Activity created successfully',
-        activity
+        activity: savedActivity
       });
+  
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Create activity error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: error.message || 'Gagal membuat aktivitas'
+      });
     }
   },
-
+  
   async getActivities(req, res) {
     try {
-      const { status } = req.query;
-      const query = {};
-
-      if (status) query.status = status;
-
-      const activities = await Activity.find(query)
-        .populate('coordinator', 'username')
-        .populate('volunteers.user', 'username')
-        .sort('date');
-
-      res.json({ activities });
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set ke awal hari
+  
+      const activities = await Activity.find({
+        status: { $ne: 'cancelled' },
+        date: { $gte: today }
+      })
+      .populate('coordinator', 'username')
+      .populate('volunteers.user', 'username')
+      .populate('relatedReport', 'title description') // Tambahkan populate untuk report
+      .sort({ date: 1 });
+  
+      // Transform data sebelum dikirim
+      const transformedActivities = activities.map(activity => ({
+        _id: activity._id,
+        title: activity.title,
+        description: activity.description,
+        location: activity.location,
+        date: activity.date,
+        coordinator: activity.coordinator?.username || 'Koordinator tidak tersedia',
+        volunteers: activity.volunteers || [],
+        totalVolunteers: activity.volunteers?.filter(v => v.status === 'approved').length || 0,
+        status: activity.status,
+        relatedReport: activity.relatedReport
+      }));
+  
+      res.json({
+        success: true,
+        activities: transformedActivities
+      });
+  
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Error fetching activities:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Gagal mengambil data aktivitas'
+      });
     }
-  },
-
+  }, // Tambahkan koma di sini
+  
   async joinActivity(req, res) {
     try {
       const { activityId } = req.params;
-      
+  
       const activity = await Activity.findById(activityId);
       if (!activity) {
         return res.status(404).json({ error: 'Activity not found' });
       }
-
+  
       const alreadyJoined = activity.volunteers.some(
         v => v.user.toString() === req.user.id
       );
-
+  
       if (alreadyJoined) {
         return res.status(400).json({
           error: 'You have already joined this activity'
         });
       }
-
+  
       activity.volunteers.push({
         user: req.user.id,
         status: 'pending'
       });
-
+  
       await activity.save();
-
+  
       // Create notification for coordinator
       await Notification.create({
         recipient: activity.coordinator,
@@ -80,7 +121,7 @@ const activityController = {
         relatedId: activity._id,
         onModel: 'Activity'
       });
-
+  
       res.json({
         message: 'Join request sent successfully',
         activity
@@ -89,7 +130,7 @@ const activityController = {
       res.status(500).json({ error: error.message });
     }
   },
-
+  
   async updateVolunteerStatus(req, res) {
     try {
       const { activityId, userId } = req.params;

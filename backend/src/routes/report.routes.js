@@ -1,25 +1,30 @@
-// src/routes/report.routes.js
 const express = require('express');
 const router = express.Router();
 const reportController = require('../controllers/report.controller');
-const auth = require('../middleware/auth.middleware');
-const checkRole = require('../middleware/role.middleware');
-const upload = require('../config/multer');
+const auth = require('../middleware/auth.middleware'); // Middleware autentikasi
+const checkRole = require('../middleware/role.middleware'); // Middleware peran pengguna
+const { upload, setUploadType } = require('../config/multer');
 
-router.post('/', 
-  auth, 
-  upload.array('photos', 5),
+// Endpoint untuk membuat laporan baru
+router.post(
+  '/',
+  auth, // Pastikan user sudah login
+  upload.array('photos', 5), // Maksimal 5 foto
   reportController.createReport
 );
 
-router.get('/', 
-  auth, 
+// Endpoint untuk mendapatkan daftar laporan (dengan filter opsional)
+router.get(
+  '/',
+  auth, // Pastikan user sudah login
   reportController.getReports
 );
 
-router.patch('/:id',
-  auth,
-  checkRole(['coordinator', 'admin']),
+// Endpoint untuk memperbarui laporan (misalnya, verifikasi atau assign)
+router.patch(
+  '/:id',
+  auth, // Pastikan user sudah login
+  checkRole(['coordinator', 'admin']), // Hanya role tertentu yang bisa mengupdate
   reportController.updateReport
 );
 

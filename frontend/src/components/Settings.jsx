@@ -1,31 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Mail, Phone, Clock, Globe } from 'lucide-react';
+import DefaultPfp from '../assets/images/Default_pfp.png';
 import '../styles/Settings.css';
 
-const Settings = ({ user, onNavigate }) => {
-  const defaultProfilePhoto = "../assets/images/Default_pfp.png"; // Path ke gambar default
-  const [profileImage, setProfileImage] = useState(defaultProfilePhoto);
-  const [updatedUserData, setUpdatedUserData] = useState({});
+const Settings = ({ onNavigate }) => {
+  const [profileData, setProfileData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fungsi untuk mengambil data profil
+  const fetchProfileData = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Token tidak ditemukan');
+
+      const response = await fetch('http://localhost:5000/api/users/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Gagal mengambil data profil');
+      }
+
+      const data = await response.json();
+      setProfileData(data.user);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setError(error.message || 'Gagal memuat data profil');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Ambil gambar profil dan data pengguna dari localStorage
-    const storedImage = localStorage.getItem('profileImage');
-    const storedUserData = JSON.parse(localStorage.getItem('userData'));
-    if (storedImage) {
-      setProfileImage(storedImage);
-    }
-    if (storedUserData) {
-      setUpdatedUserData(storedUserData);
-    }
+    fetchProfileData();
   }, []);
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) return <div>Memuat...</div>;
+  if (error) return <div>{error}</div>;
 
   const handleEditProfileClick = () => {
-    onNavigate('settings-edit'); // Navigasi ke halaman edit profil
+    onNavigate('settings-edit', { user: profileData, fetchProfileData }); // Kirim data dan fungsi ke SettingsEdit
   };
+
+  const profileImageURL = profileData?.profileImage
+    ? `http://localhost:5000${profileData.profileImage}`
+    : DefaultPfp;
 
   return (
     <div className="settings-container">
@@ -41,41 +64,44 @@ const Settings = ({ user, onNavigate }) => {
 
       <div className="settings-content">
         <h2 className="settings-title">Setting</h2>
-        <p className="settings-subtitle">Welcome back, {updatedUserData.fullName || user.username}! Here's what's happening today.</p>
+        <p className="settings-subtitle">
+          Welcome back, {profileData?.username || 'User'}! Here's your profile information.
+        </p>
 
         <div className="profile-section">
           <div className="profile-header">
             <div className="profile-image-container">
-              <img 
-                src={profileImage} 
-                alt="Profile" 
-                className="profile-image" 
+              <img
+                src={profileImageURL}
+                alt="Profile"
+                className="profile-image"
               />
             </div>
 
             <div className="profile-info">
               <div className="profile-name-section">
-                <h3>{updatedUserData.fullName || user.username}</h3>
+                <h3>{profileData?.username || 'USERNAME'}</h3>
                 <button className="edit-profile-btn" onClick={handleEditProfileClick}>Edit Profile</button>
               </div>
-              <p className="profile-title">{user.role}</p>
+              {/* Perubahan untuk memastikan role selalu tampil kapital */}
+              <p className="profile-title">{profileData?.role?.toUpperCase() || 'ROLE'}</p>
 
               <div className="profile-details">
                 <div className="detail-item">
                   <MapPin size={16} />
-                  <span>{updatedUserData.location || 'Lokasi belum ditambahkan'}</span>
+                  <span>{profileData?.location || 'Lokasi belum ditambahkan'}</span>
                 </div>
                 <div className="detail-item">
                   <Mail size={16} />
-                  <span>{updatedUserData.email || 'Email belum ditambahkan'}</span>
+                  <span>{profileData?.email || 'Email belum ditambahkan'}</span>
                 </div>
                 <div className="detail-item">
                   <Phone size={16} />
-                  <span>{updatedUserData.phoneNumber || 'Nomor telepon belum ditambahkan'}</span>
+                  <span>{profileData?.phone || 'Nomor telepon belum ditambahkan'}</span>
                 </div>
                 <div className="detail-item">
                   <Globe size={16} />
-                  <span>{updatedUserData.website || 'Website belum ditambahkan'}</span>
+                  <span>{profileData?.organization || 'Organisasi belum ditambahkan'}</span>
                 </div>
               </div>
             </div>
@@ -87,11 +113,11 @@ const Settings = ({ user, onNavigate }) => {
             <h4>Activity Statistics</h4>
             <div className="stats-grid">
               <div className="stat-item">
-                <h5>{user.reportsSubmitted || 0}</h5>
+                <h5>{profileData?.reportsSubmitted || 0}</h5>
                 <p>Reports Submitted</p>
               </div>
               <div className="stat-item">
-                <h5>{user.activitiesJoined || 0}</h5>
+                <h5>{profileData?.activitiesJoined || 0}</h5>
                 <p>Activities Joined</p>
               </div>
             </div>
@@ -100,8 +126,8 @@ const Settings = ({ user, onNavigate }) => {
           <div className="history-activities">
             <h4>History Activities</h4>
             <div className="activity-list">
-              {user.activityHistory && user.activityHistory.length > 0 ? (
-                user.activityHistory.map((activity, index) => (
+              {profileData?.activityHistory && profileData.activityHistory.length > 0 ? (
+                profileData.activityHistory.map((activity, index) => (
                   <div className="activity-item" key={index}>
                     <Clock size={16} />
                     <div className="activity-info">

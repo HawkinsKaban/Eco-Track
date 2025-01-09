@@ -1,52 +1,58 @@
 // src/models/report.model.js
 const mongoose = require('mongoose');
 
-const reportSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  category: {
-    type: String,
-    required: true,
-    enum: ['Kerusakan Lingkungan', 'Sampah Limbah'],
-  },
-  location: {
-    address: String,
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      index: '2dsphere',
+const reportSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, 'Title is required'],
+      trim: true, // Menghapus spasi ekstra di awal/akhir string
+    },
+    description: {
+      type: String,
+      required: [true, 'Description is required'],
+    },
+    category: {
+      type: String,
+      required: [true, 'Category is required'],
+      enum: ['Kerusakan Lingkungan', 'Sampah Limbah'], // Opsi kategori
+    },
+    location: {
+      address: {
+        type: String,
+        required: [true, 'Address is required'],
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        required: [true, 'Coordinates are required'],
+        index: '2dsphere', // Untuk mendukung pencarian geospasial
+      },
+    },
+    photos: {
+      type: [String], // Array string untuk menyimpan URL foto
+      default: [], // Default adalah array kosong jika tidak ada foto
+    },
+    status: {
+      type: String,
+      enum: ['draft', 'verified', 'active'], // Status laporan
+      default: 'draft', // Default status adalah 'draft'
+    },
+    reporter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User', // Mengacu pada model User
+      required: [true, 'Reporter is required'],
+    },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User', // Mengacu pada model User
+      default: null, // Default tidak ada user yang ditugaskan
     },
   },
-  photos: [String],
-  status: {
-    type: String,
-    enum: ['pending', 'verified', 'in-progress', 'resolved'],
-    default: 'pending',
-  },
-  reporter: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  {
+    timestamps: true, // Menambahkan otomatis 'createdAt' dan 'updatedAt'
+  }
+);
 
+// Membuat model dengan nama 'Report'
 const Report = mongoose.model('Report', reportSchema);
 module.exports = Report;

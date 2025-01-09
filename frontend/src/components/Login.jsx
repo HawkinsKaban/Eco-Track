@@ -10,15 +10,16 @@ import Circle4 from '../assets/images/Ellipse 8.png';
 import Circle5 from '../assets/images/Ellipse 9.png';
 
 const Login = ({ onNavigateToRegister, onLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // State untuk form dan UI
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Fungsi untuk menghapus pesan error saat user mengetik ulang
-  const clearErrorMessage = () => setErrorMessage('');
-
-  // Efek untuk menghilangkan pesan error setelah 3 detik
+  // Efek untuk menghapus pesan error setelah 3 detik
   useEffect(() => {
     if (errorMessage) {
       const timer = setTimeout(() => {
@@ -28,24 +29,65 @@ const Login = ({ onNavigateToRegister, onLogin }) => {
     }
   }, [errorMessage]);
 
-  // Fungsi untuk menangani login
-  const handleLogin = (e) => {
-    e.preventDefault();
+  // Handle perubahan input
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setErrorMessage(''); // Hapus error message saat user mengetik
+  };
 
-    // Trim input sebelum dikirim ke fungsi onLogin
-    const trimmedUsername = username.trim();
-    const trimmedPassword = password.trim();
+  // Fungsi untuk login
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Validasi input
+    const trimmedUsername = formData.username.trim();
+    const trimmedPassword = formData.password.trim();
 
     if (!trimmedUsername || !trimmedPassword) {
       setErrorMessage('Username dan Password tidak boleh kosong');
+      setIsLoading(false);
       return;
     }
 
-    const isValid = onLogin(trimmedUsername, trimmedPassword);
-    if (!isValid) {
-      setErrorMessage('Invalid username or password');
-    } else {
-      setErrorMessage('');
+    try {
+      // Kirim request ke API login
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: trimmedUsername,
+          password: trimmedPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+
+      // Jika login berhasil
+      if (data.success) {
+        // Simpan token
+        localStorage.setItem('token', data.data.token);
+
+        // Panggil fungsi onLogin dengan data user
+        onLogin(data.data.user);
+      } else {
+        throw new Error(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrorMessage(error.message || 'Terjadi kesalahan saat login');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -58,40 +100,64 @@ const Login = ({ onNavigateToRegister, onLogin }) => {
         <img src={Circle4} alt="Circle 4" className="circle circle4" />
         <img src={Circle5} alt="Circle 5" className="circle circle5" />
       </div>
+      
       <div className="form-container">
         <h2 className="form-title">WELCOME</h2>
+
         <form className="form" onSubmit={handleLogin}>
+          {/* Input Username */}
           <input
             type="text"
             placeholder="Username"
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-              clearErrorMessage();
-            }}
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
             className="form-input"
+            disabled={isLoading}
           />
+
+          {/* Input Password dengan toggle visibility */}
           <div className="password-container">
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                clearErrorMessage();
-              }}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
               className="form-input"
+              disabled={isLoading}
             />
-            <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+            <span 
+              className="toggle-password" 
+              onClick={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? <VisibilityOff /> : <Visibility />}
             </span>
           </div>
-          <button type="submit" className="form-button">Login</button>
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
+
+          {/* Tombol Login */}
+          <button 
+            type="submit" 
+            className="form-button"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'Login'}
+          </button>
+
+          {/* Pesan Error */}
+          {errorMessage && (
+            <p className="error-message">{errorMessage}</p>
+          )}
         </form>
+
+        {/* Link ke Register */}
         <p className="text-center">
           Belum punya akun?{' '}
-          <span className="link-button" onClick={onNavigateToRegister}>
+          <span 
+            className="link-button" 
+            onClick={onNavigateToRegister}
+            style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+          >
             Register
           </span>
         </p>

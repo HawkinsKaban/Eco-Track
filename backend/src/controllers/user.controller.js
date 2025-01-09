@@ -2,109 +2,111 @@
 const User = require('../models/user.model');
 
 const userController = {
+  // Update Profile
   async updateProfile(req, res) {
     try {
       const updates = req.body;
       const allowedUpdates = ['email', 'phone', 'location', 'organization'];
-      
-      // Filter out non-allowed updates
+
+      // Filter hanya field yang diizinkan
       const filteredUpdates = Object.keys(updates)
-        .filter(key => allowedUpdates.includes(key))
+        .filter((key) => allowedUpdates.includes(key))
         .reduce((obj, key) => {
           obj[key] = updates[key];
           return obj;
         }, {});
 
+      // Tambahkan path file jika ada file yang diunggah
       if (req.file) {
-        filteredUpdates.profileImage = req.file.path;
+        filteredUpdates.profileImage = `/uploads/profiles/${req.file.filename}`;
       }
 
+      // Perbarui user di database
       const user = await User.findByIdAndUpdate(
         req.user.id,
-        filteredUpdates,
-        { new: true, runValidators: true }
+        { $set: filteredUpdates }, // Gunakan $set untuk menghindari overwrite data lainnya
+        { new: true, runValidators: true } // Kembalikan data terbaru dan jalankan validator
       );
 
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ success: false, error: 'User not found' });
       }
 
-      res.json({
+      // Kembalikan data terbaru
+      res.status(200).json({
+        success: true,
         message: 'Profile updated successfully',
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          profileImage: user.profileImage,
-          location: user.location,
-          phone: user.phone,
-          organization: user.organization
-        }
+        user,
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Error updating profile:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Internal server error',
+      });
     }
   },
 
+  // Get Profile
   async getProfile(req, res) {
     try {
       const user = await User.findById(req.user.id);
+
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ success: false, error: 'User not found' });
       }
 
-      res.json({
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          profileImage: user.profileImage,
-          location: user.location,
-          phone: user.phone,
-          organization: user.organization,
-          createdAt: user.createdAt
-        }
+      res.status(200).json({
+        success: true,
+        user,
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Error fetching profile:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Internal server error',
+      });
     }
   },
 
-  // Tambahkan fungsi updateUserRole
+  // Update User Role
   async updateUserRole(req, res) {
     try {
-      // Validasi role yang diizinkan
       const allowedRoles = ['user', 'volunteer', 'coordinator', 'admin'];
-      if (!allowedRoles.includes(req.body.role)) {
-        return res.status(400).json({ error: 'Role tidak valid' });
+      const { role } = req.body;
+
+      // Validasi role yang diizinkan
+      if (!allowedRoles.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid role. Allowed roles are: ' + allowedRoles.join(', '),
+        });
       }
 
+      // Cari user dan perbarui role
       const user = await User.findByIdAndUpdate(
         req.params.userId,
-        { role: req.body.role },
-        { new: true }
+        { role },
+        { new: true, runValidators: true } // Validasi role
       );
 
       if (!user) {
-        return res.status(404).json({ error: 'User tidak ditemukan' });
+        return res.status(404).json({ success: false, error: 'User not found' });
       }
 
-      res.json({
+      res.status(200).json({
         success: true,
-        message: 'Role user berhasil diupdate',
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          role: user.role
-        }
+        message: 'User role updated successfully',
+        user,
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Error updating user role:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Internal server error',
+      });
     }
-  }
+  },
 };
 
 module.exports = userController;

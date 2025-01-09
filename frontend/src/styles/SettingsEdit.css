@@ -1,19 +1,27 @@
-/* Settings Edit Page Styles */
+/* General Layout */
 .settings-edit-container {
   display: flex;
   min-height: 100vh;
   background-color: #f8f9fa;
   font-family: 'Inter', sans-serif;
-  flex-wrap: wrap; /* Memastikan konten tidak keluar dari layar */
+  flex-wrap: nowrap;
+  overflow-x: hidden; /* Cegah scroll horizontal */
+  width: 100%; /* Pastikan lebar 100% */
+  max-width: 100%; /* Tidak lebih dari viewport */
+  box-sizing: border-box; /* Pastikan padding tidak menambah lebar */
 }
 
 /* Sidebar styles */
 .sidebar {
   width: 250px;
+  max-width: 250px; /* Batas maksimal lebar sidebar */
   background-color: #ffffff;
   padding: 20px;
   border-right: 1px solid #e2e8f0;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1); /* Memberikan bayangan halus */
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* Jangan biarkan mengecil */
+  overflow-x: hidden; /* Hindari scroll pada sidebar */
+  box-sizing: border-box;
 }
 
 .sidebar-title {
@@ -48,7 +56,10 @@
   flex: 1;
   padding: 32px;
   background-color: #ffffff;
-  overflow-y: auto; /* Pastikan konten bisa digulir jika terlalu panjang */
+  overflow-x: hidden; /* Hindari scroll horizontal */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box; /* Pastikan padding tidak menambah lebar */
 }
 
 .settings-edit-header {
@@ -136,6 +147,23 @@
   font-size: 14px;
 }
 
+/* Button untuk Hapus Foto */
+.remove-photo-btn {
+  background-color: #e53e3e; /* Warna merah untuk tombol hapus */
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.remove-photo-btn:hover {
+  background-color: #c53030; /* Warna merah lebih gelap saat hover */
+}
+
 .done-btn {
   background-color: #15803d;
   color: white;
@@ -210,13 +238,6 @@
     width: 80%; /* Membuat tombol lebih kecil pada perangkat kecil */
   }
 
-  .sidebar {
-    width: 100%;
-    padding: 10px;
-    border-right: none;
-    box-shadow: none; /* Hilangkan bayangan pada perangkat kecil */
-  }
-
   .settings-edit-content {
     padding: 16px;
   }
@@ -233,5 +254,10 @@
   .photo-upload-icon {
     bottom: -5px;
     right: -5px;
+  }
+
+  .remove-photo-btn {
+    width: 80%; /* Tombol lebih kecil pada perangkat kecil */
+    margin-top: 12px; /* Tambahkan spasi di atas tombol */
   }
 }

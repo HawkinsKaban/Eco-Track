@@ -4,6 +4,8 @@ import "../styles/Report.css";
 
 const Report = ({ onNavigate }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     category: "Kerusakan Lingkungan",
@@ -20,6 +22,7 @@ const Report = ({ onNavigate }) => {
     { number: 4, label: "Selesai", active: currentStep >= 4 },
   ];
 
+  // Fungsi untuk menangani tombol "Lanjutkan"
   const handleNext = () => {
     if (currentStep === 1 && (!formData.title || !formData.description)) {
       alert("Semua bidang harus diisi pada langkah pertama.");
@@ -38,31 +41,65 @@ const Report = ({ onNavigate }) => {
     }
   };
 
+  // Fungsi untuk menangani perubahan foto
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData({ ...formData, photo: URL.createObjectURL(file) });
+      console.log("File yang dipilih:", file);
+      setFormData({ ...formData, photo: file });
     }
   };
 
-  const handleSubmitReport = () => {
-    const newReport = {
-      id: Date.now(),
-      title: formData.title,
-      location: formData.address,
-      status: "Draft", // Ubah status menjadi Draft
-      time: new Date().toLocaleTimeString(),
-      photo: formData.photo,
-    };
+  // Fungsi untuk mengirim laporan ke server
+  const submitReport = async () => {
+    setIsLoading(true);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append(
+        "location",
+        JSON.stringify({
+          address: formData.address,
+          coordinates: [106.816666, -6.200000], // Sesuaikan dengan data sebenarnya
+        })
+      );
   
-    const existingReports = JSON.parse(localStorage.getItem("reports")) || [];
-    const updatedReports = [...existingReports, newReport];
+      if (formData.photo) {
+        formDataToSend.append("photos", formData.photo);
+      }
   
-    localStorage.setItem("reports", JSON.stringify(updatedReports));
-    alert("Laporan berhasil dibuat! Silakan publikasikan di halaman Kegiatan.");
-    onNavigate("activities"); // Arahkan pengguna ke halaman Kegiatan
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Token tidak ditemukan. Silakan login ulang.");
+      }
+  
+      const response = await fetch("http://localhost:5000/api/reports", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Gagal mengirim laporan");
+      }
+  
+      const data = await response.json();
+      alert("Laporan berhasil dibuat: " + data.message);
+      onNavigate("activities"); // Alihkan ke halaman Kegiatan
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      setError("Gagal mengirim laporan: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
+  // Fungsi untuk merender konten setiap langkah
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -116,21 +153,10 @@ const Report = ({ onNavigate }) => {
                   {!formData.photo ? (
                     <>
                       <Camera className="upload-icon" />
-                      <p className="upload-text">Klik untuk unggah foto atau tarik file ke sini</p>
+                      <p className="upload-text">Klik untuk unggah foto</p>
                     </>
                   ) : (
-                    <div>
-                      <img src={formData.photo} alt="Preview Foto" className="max-w-full h-auto" />
-                      <button
-                        className="clear-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFormData({ ...formData, photo: null });
-                        }}
-                      >
-                        Hapus Foto
-                      </button>
-                    </div>
+                    <img src={URL.createObjectURL(formData.photo)} alt="Preview Foto" className="uploaded-photo" />
                   )}
                   <input
                     type="file"
@@ -177,16 +203,18 @@ const Report = ({ onNavigate }) => {
       case 4:
         return (
           <div className="text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="text-green-600" size={24} />
-              </div>
-            </div>
-            <h3>Laporan Anda Berhasil Dikirim</h3>
-            <p>Terima kasih atas kontribusi Anda dalam menjaga lingkungan.</p>
-            <button onClick={handleSubmitReport} className="next-button">
-              Selesai
-            </button>
+            {isLoading ? (
+              <p>Mengirim laporan...</p>
+            ) : (
+              <>
+                <Check className="success-icon" size={32} />
+                <h3>Laporan Anda Siap Dikirim</h3>
+                <button onClick={submitReport} className="next-button">
+                  Kirim Laporan
+                </button>
+              </>
+            )}
+            {error && <p className="error-message">{error}</p>}
           </div>
         );
       default:
@@ -215,9 +243,6 @@ const Report = ({ onNavigate }) => {
       </div>
       <div className="settings-content">
         <h2 className="settings-title">Laporan</h2>
-        <p className="settings-subtitle">
-          Pilih kategori masalah, upload foto, dan tentukan lokasi masalah.
-        </p>
         <div className="progress-bar">
           {steps.map((step, index) => (
             <React.Fragment key={step.number}>

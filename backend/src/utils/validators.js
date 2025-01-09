@@ -1,3 +1,4 @@
+// src/utils/validators.js
 const Joi = require('joi');
 
 const registerSchema = Joi.object({

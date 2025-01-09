@@ -3,25 +3,30 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
 const auth = require('../middleware/auth.middleware');
-const checkRole = require('../middleware/role.middleware'); // Tambahkan import ini
-const upload = require('../config/multer');
+const checkRole = require('../middleware/role.middleware'); // Middleware untuk memeriksa role
+const { upload, setUploadType } = require('../config/multer');
 
-// Route yang sudah ada
-router.get('/profile', 
-  auth, 
+// Route: Ambil profil pengguna
+router.get(
+  '/profile',
+  auth, // Pastikan pengguna terautentikasi
   userController.getProfile
 );
 
-router.patch('/profile',
-  auth,
-  upload.single('profileImage'),
+// Route: Perbarui profil pengguna
+router.patch(
+  '/profile',
+  auth, // Pastikan pengguna terautentikasi
+  setUploadType('profiles'), // Tetapkan folder upload untuk gambar profil
+  upload.single('profileImage'), // Middleware upload file
   userController.updateProfile
 );
 
-// Route untuk update role
-router.patch('/role/:userId',
-  auth,
-  checkRole(['admin']), // Sekarang checkRole sudah bisa digunakan
+// Route: Perbarui role pengguna (khusus admin)
+router.patch(
+  '/role/:userId',
+  auth, // Pastikan pengguna terautentikasi
+  checkRole(['admin']), // Hanya admin yang dapat mengakses
   userController.updateUserRole
 );
 
